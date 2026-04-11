@@ -3,6 +3,5 @@ dist/
 .DS_Store
 .env
 .env.*
-.kimi/checkpoints/
-.kimi/session_backup/
+.kimi/
 production pipeline copy/
