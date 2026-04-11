@@ -1,0 +1,13 @@
+[     214ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:5175/:0
+[     227ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:5175/favicon.ico:0
+[   35092ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5175/@vite/client:559
+[   35226ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/src/main.js:0
+[   35226ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/@vite/client:0
+[   35228ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/manifest.json:0
+[   35318ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/manifest.json:0
+[  212503ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/@vite/client:0
+[  212503ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/src/main.js:0
+[  212514ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/manifest.json:0
+[  214295ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/@vite/client:0
+[  214295ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/src/main.js:0
+[  214297ms] [ERROR] Failed to load resource: net::ERR_FAILED @ http://localhost:5175/manifest.json:0

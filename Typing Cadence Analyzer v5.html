@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Typing Cadence Analyzer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.15);
+      --text: #f0f0f0;
+      --text2: #888;
+      --text3: #555;
+      --green: #1D9E75;
+      --green-light: #5DCAA5;
+      --purple-light: #AFA9EC;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 1.25rem;
+    }
+
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 14px;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      resize: none;
+      height: 84px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--green); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 1rem 0;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; letter-spacing: 0.04em; }
+    .stat-value { font-size: 22px; font-weight: 500; line-height: 1.2; }
+    .stat-unit { font-size: 11px; color: var(--text3); font-weight: 400; }
+    .wpm-val { color: var(--green); }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text3);
+      margin: 1.25rem 0 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .wpm-chart-wrap { height: 60px; margin: 0.75rem 0; }
+    canvas { width: 100%; height: 60px; display: block; }
+
+    .rhythm-row { display: flex; align-items: center; gap: 10px; margin: 0.6rem 0; }
+    .rhythm-label { font-size: 12px; color: var(--text2); width: 80px; flex-shrink: 0; }
+    .rhythm-bar-bg { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .rhythm-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+    .rhythm-val { font-size: 12px; color: var(--text2); width: 36px; text-align: right; }
+
+    .legend { display: flex; gap: 16px; margin: 0 0 0.5rem; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    .vis-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 80px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border2) transparent;
+    }
+    .bar-group { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+    .bar { width: 18px; border-radius: 3px 3px 0 0; min-height: 2px; }
+    .bar-dwell { background: var(--green-light); }
+    .bar-flight { background: var(--purple-light); }
+    .bar-key { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+    .reset-btn {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 6px 14px;
+      cursor: pointer;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text2);
+      margin-top: 1rem;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, color 0.15s;
+    }
+    .reset-btn:hover { background: var(--surface2); color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Typing Cadence Analyzer</h1>
+
+  <textarea id="ta" placeholder="Start typing anything here…" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+
+  <div class="stats-grid">
+    <div class="stat">
+      <div class="stat-label">Live WPM</div>
+      <div class="stat-value wpm-val" id="live-wpm">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg dwell</div>
+      <div class="stat-value" id="avg-dwell">—<span class="stat-unit"> ms</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg flight</div>
+      <div class="stat-value" id="avg-flight">—<span class="stat-unit"> ms</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Keystrokes</div>
+      <div class="stat-value" id="ks-count">0</div>
+    </div>
+  </div>
+
+  <div class="section-label">WPM over time</div>
+  <div class="wpm-chart-wrap">
+    <canvas id="wpm-canvas"></canvas>
+  </div>
+
+  <div class="section-label">Rhythm feel</div>
+  <div class="rhythm-row">
+    <span class="rhythm-label">Consistency</span>
+    <div class="rhythm-bar-bg"><div class="rhythm-bar-fill" id="consistency-bar" style="width:0%;background:var(--green-light)"></div></div>
+    <span class="rhythm-val" id="consistency-val">—</span>
+  </div>
+  <div class="rhythm-row">
+    <span class="rhythm-label">Speed</span>
+    <div class="rhythm-bar-bg"><div class="rhythm-bar-fill" id="speed-bar" style="width:0%;background:var(--purple-light)"></div></div>
+    <span class="rhythm-val" id="speed-val">—</span>
+  </div>
+
+  <div class="section-label">Per-key timing</div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green-light)"></div>Dwell</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple-light)"></div>Flight</div>
+  </div>
+  <div class="vis-row" id="vis"></div>
+
+  <button class="reset-btn" id="reset-btn">Clear</button>
+</div>
+
+<script>
+  const ta = document.getElementById('ta');
+  const vis = document.getElementById('vis');
+  const avgDwellEl = document.getElementById('avg-dwell');
+  const avgFlightEl = document.getElementById('avg-flight');
+  const ksCountEl = document.getElementById('ks-count');
+  const liveWpmEl = document.getElementById('live-wpm');
+  const consistencyBar = document.getElementById('consistency-bar');
+  const consistencyVal = document.getElementById('consistency-val');
+  const speedBar = document.getElementById('speed-bar');
+  const speedVal = document.getElementById('speed-val');
+  const wpmCanvas = document.getElementById('wpm-canvas');
+  const ctx = wpmCanvas.getContext('2d');
+
+  const WINDOW_MS = 5000;
+  const SKIP_KEYS = new Set(['Backspace','Shift','Control','Alt','Meta','CapsLock','Tab','Enter','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']);
+
+  let keyDownTimes = {};
+  let events = [];
+  let lastUpTime = null;
+  let wpmHistory = [];
+  let keystrokeTimestamps = [];
+
+  function getRollingWpm() {
+    const now = performance.now();
+    keystrokeTimestamps = keystrokeTimestamps.filter(t => t >= now - WINDOW_MS);
+    if (keystrokeTimestamps.length < 2) return 0;
+    const span = (now - keystrokeTimestamps[0]) / 60000;
+    if (span <= 0) return 0;
+    return Math.round((keystrokeTimestamps.length / 5) / span);
+  }
+
+  function drawWpmChart() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = wpmCanvas.parentElement.clientWidth || 300;
+    const h = 60;
+    wpmCanvas.width = w * dpr;
+    wpmCanvas.height = h * dpr;
+    wpmCanvas.style.width = w + 'px';
+    wpmCanvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    if (wpmHistory.length < 2) return;
+
+    const maxWpm = Math.max(...wpmHistory.map(p => p.wpm), 20);
+    const pts = wpmHistory.map((p, i) => ({
+      x: (i / (wpmHistory.length - 1)) * w,
+      y: h - 6 - ((p.wpm / maxWpm) * (h - 16))
+    }));
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      const cp = (pts[i].x + pts[i-1].x) / 2;
+      ctx.bezierCurveTo(cp, pts[i-1].y, cp, pts[i].y, pts[i].x, pts[i].y);
+    }
+    ctx.strokeStyle = '#1D9E75';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.lineTo(pts[pts.length-1].x, h);
+    ctx.lineTo(pts[0].x, h);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(29,158,117,0.12)';
+    ctx.fill();
+
+    pts.forEach(pt => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#1D9E75';
+      ctx.fill();
+    });
+
+    ctx.font = '10px monospace';
+    ctx.fillStyle = 'rgba(128,128,128,0.6)';
+    ctx.textAlign = 'right';
+    ctx.fillText(maxWpm + ' wpm', w - 2, 10);
+  }
+
+  function updateStats() {
+    const typingEvents = events.filter(e => !SKIP_KEYS.has(e.key));
+    const dwells = typingEvents.map(e => e.dwell);
+    const flights = typingEvents.map(e => e.flight).filter(v => v !== null && v >= 0 && v < 2000);
+
+    ksCountEl.textContent = typingEvents.length;
+
+    if (dwells.length >= 2) {
+      const avg = dwells.reduce((a, b) => a + b, 0) / dwells.length;
+      avgDwellEl.innerHTML = Math.round(avg) + '<span class="stat-unit"> ms</span>';
+      const variance = dwells.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / dwells.length;
+      const cv = avg > 0 ? Math.sqrt(variance) / avg : 1;
+      const consistency = Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
+      consistencyBar.style.width = consistency + '%';
+      consistencyVal.textContent = consistency + '%';
+      const speed = Math.max(0, Math.min(100, Math.round(100 - (avg / 5))));
+      speedBar.style.width = speed + '%';
+      speedVal.textContent = speed + '%';
+    }
+
+    if (flights.length) {
+      const avg = flights.reduce((a, b) => a + b, 0) / flights.length;
+      avgFlightEl.innerHTML = Math.round(avg) + '<span class="stat-unit"> ms</span>';
+    }
+
+    renderBars(typingEvents);
+  }
+
+  function renderBars(typingEvents) {
+    const recent = typingEvents.slice(-24);
+    if (!recent.length) { vis.innerHTML = ''; return; }
+
+    const maxVal = Math.max(
+      ...recent.map(e => e.dwell || 0),
+      ...recent.map(e => (e.flight !== null && e.flight >= 0 && e.flight < 2000) ? e.flight : 0),
+      10
+    );
+
+    vis.innerHTML = recent.map(e => {
+      const dh = Math.max(2, Math.round(((e.dwell || 0) / maxVal) * 72));
+      const validFlight = e.flight !== null && e.flight >= 0 && e.flight < 2000;
+      const fh = validFlight ? Math.max(2, Math.round((e.flight / maxVal) * 72)) : 0;
+      const label = e.key === ' ' ? '·' : e.key.length === 1 ? e.key : '?';
+      return `<div class="bar-group">
+        <div class="bar bar-flight" style="height:${fh}px"></div>
+        <div class="bar bar-dwell" style="height:${dh}px"></div>
+        <div class="bar-key">${label}</div>
+      </div>`;
+    }).join('');
+  }
+
+  setInterval(() => {
+    const wpm = getRollingWpm();
+    liveWpmEl.textContent = wpm > 0 ? wpm : '—';
+    wpmHistory.push({ wpm });
+    if (wpmHistory.length > 60) wpmHistory.shift();
+    drawWpmChart();
+  }, 1000);
+
+  ta.addEventListener('keydown', e => {
+    if (!keyDownTimes[e.key]) keyDownTimes[e.key] = performance.now();
+  });
+
+  ta.addEventListener('keyup', e => {
+    const t = performance.now();
+    const downTime = keyDownTimes[e.key];
+    if (downTime === undefined) return;
+    const dwell = t - downTime;
+    const flight = lastUpTime !== null ? (downTime - lastUpTime) : null;
+    events.push({ key: e.key, dwell, flight });
+    if (!SKIP_KEYS.has(e.key)) keystrokeTimestamps.push(downTime);
+    lastUpTime = t;
+    delete keyDownTimes[e.key];
+    updateStats();
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    ta.value = '';
+    events = [];
+    keyDownTimes = {};
+    lastUpTime = null;
+    wpmHistory = [];
+    keystrokeTimestamps = [];
+    avgDwellEl.innerHTML = '—<span class="stat-unit"> ms</span>';
+    avgFlightEl.innerHTML = '—<span class="stat-unit"> ms</span>';
+    ksCountEl.textContent = '0';
+    liveWpmEl.textContent = '—';
+    consistencyBar.style.width = '0%';
+    consistencyVal.textContent = '—';
+    speedBar.style.width = '0%';
+    speedVal.textContent = '—';
+    vis.innerHTML = '';
+    ctx.clearRect(0, 0, wpmCanvas.width, wpmCanvas.height);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]: Intelligence
+    - generic [ref=e7]: Complete a few sessions to generate your personal typist portrait.
+    - generic [ref=e8]:
+      - generic [ref=e9]: Mode
+      - generic [ref=e10]:
+        - button "quote" [ref=e11] [cursor=pointer]
+        - button "zen" [ref=e12] [cursor=pointer]
+      - generic [ref=e13]: AI Settings
+      - generic [ref=e14]: API Key
+      - textbox "sk-ant-... or sk-... (press Enter to save)" [ref=e16]
+      - generic [ref=e17]: No key set — using local drills
+      - generic [ref=e18]: API Mode
+      - combobox [ref=e19]:
+        - option "Auto (Uses API)" [selected]
+        - option "Manual (Local Fallback)"
+      - generic [ref=e20]:
+        - generic [ref=e21] [cursor=pointer]:
+          - checkbox "Sound on error" [ref=e22]
+          - text: Sound on error
+        - generic [ref=e23] [cursor=pointer]:
+          - checkbox "Ghost replay" [ref=e24]
+          - text: Ghost replay
+        - generic [ref=e25] [cursor=pointer]:
+          - checkbox "Rhythm pulse" [ref=e26]
+          - text: Rhythm pulse
+        - generic [ref=e27] [cursor=pointer]:
+          - checkbox "Catch-up nudge" [checked] [ref=e28]
+          - text: Catch-up nudge
+      - generic [ref=e29]: AI Processing Log
+      - generic [ref=e31]:
+        - button "Clear all data" [ref=e32] [cursor=pointer]
+        - button "Export" [ref=e33] [cursor=pointer]
+        - button "Cinema" [ref=e34] [cursor=pointer]
+  - main [ref=e35]:
+    - generic [ref=e36]:
+      - generic [ref=e37]: Cadence
+      - button "quote" [ref=e39] [cursor=pointer]
+    - generic [ref=e40]:
+      - generic [ref=e41]: —
+      - generic [ref=e42]: Not all those who wander are lost.
+      - generic [ref=e43]: — J.R.R. Tolkien
+  - complementary [ref=e44]:
+    - generic [ref=e45]: Metrics
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: Avg Dwell
+        - generic [ref=e49]: — ms
+      - generic [ref=e50]:
+        - generic [ref=e51]: Avg Flight
+        - generic [ref=e52]: — ms
+      - generic [ref=e53]:
+        - generic [ref=e54]: Consistency
+        - generic [ref=e55]: —%
+      - generic [ref=e56]:
+        - generic [ref=e57]: Keystrokes
+        - text: "0"
+    - generic [ref=e58]: WPM over time
+    - img [ref=e60]
+    - generic [ref=e61]: Per-key timing
+    - generic [ref=e63]: Weak digraphs
+    - generic [ref=e64]: Digraph heatmap
+    - generic [ref=e66]:
+      - generic [ref=e68]: a
+      - generic [ref=e69]: b
+      - generic [ref=e70]: c
+      - generic [ref=e71]: d
+      - generic [ref=e72]: e
+      - generic [ref=e73]: f
+      - generic [ref=e74]: g
+      - generic [ref=e75]: h
+      - generic [ref=e76]: i
+      - generic [ref=e77]: j
+      - generic [ref=e78]: k
+      - generic [ref=e79]: l
+      - generic [ref=e80]: m
+      - generic [ref=e81]: "n"
+      - generic [ref=e82]: o
+      - generic [ref=e83]: p
+      - generic [ref=e84]: q
+      - generic [ref=e85]: r
+      - generic [ref=e86]: s
+      - generic [ref=e87]: t
+      - generic [ref=e88]: u
+      - generic [ref=e89]: v
+      - generic [ref=e90]: w
+      - generic [ref=e91]: x
+      - generic [ref=e92]: "y"
+      - generic [ref=e93]: z
+      - generic [ref=e94]: a
+      - generic [ref=e121]: b
+      - generic [ref=e148]: c
+      - generic [ref=e175]: d
+      - generic [ref=e202]: e
+      - generic [ref=e229]: f
+      - generic [ref=e256]: g
+      - generic [ref=e283]: h
+      - generic [ref=e310]: i
+      - generic [ref=e337]: j
+      - generic [ref=e364]: k
+      - generic [ref=e391]: l
+      - generic [ref=e418]: m
+      - generic [ref=e445]: "n"
+      - generic [ref=e472]: o
+      - generic [ref=e499]: p
+      - generic [ref=e526]: q
+      - generic [ref=e553]: r
+      - generic [ref=e580]: s
+      - generic [ref=e607]: t
+      - generic [ref=e634]: u
+      - generic [ref=e661]: v
+      - generic [ref=e688]: w
+      - generic [ref=e715]: x
+      - generic [ref=e742]: "y"
+      - generic [ref=e769]: z
+    - generic [ref=e796]: Finger map
+    - img [ref=e798]:
+      - generic: "`"
+      - generic: "1"
+      - generic: "2"
+      - generic: "3"
+      - generic: "4"
+      - generic: "5"
+      - generic: "6"
+      - generic: "7"
+      - generic: "8"
+      - generic: "9"
+      - generic: "0"
+      - generic: "-"
+      - generic: =
+      - generic: q
+      - generic: w
+      - generic: e
+      - generic: r
+      - generic: t
+      - generic: "y"
+      - generic: u
+      - generic: i
+      - generic: o
+      - generic: p
+      - generic: "["
+      - generic: "]"
+      - generic: \
+      - generic: a
+      - generic: s
+      - generic: d
+      - generic: f
+      - generic: g
+      - generic: h
+      - generic: j
+      - generic: k
+      - generic: l
+      - generic: ;
+      - generic: "'"
+      - generic: z
+      - generic: x
+      - generic: c
+      - generic: v
+      - generic: b
+      - generic: "n"
+      - generic: m
+      - generic: ","
+      - generic: .
+      - generic: /
+  - generic: catch up — read ahead ▸
+  - generic [ref=e847]: generating drill
+  - generic: click to focus
+  - textbox [active] [ref=e849]

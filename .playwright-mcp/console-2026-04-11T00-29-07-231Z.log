@@ -1,0 +1,8 @@
+[     144ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:5174/?nocache=1:0
+[   24557ms] ReferenceError: Cannot access 'tips' before initialization
+    at App.onTextComplete (http://localhost:5174/src/app/App.js?t=1775867152561:353:44)
+    at App.handleCharInput (http://localhost:5174/src/app/App.js?t=1775867152561:299:14)
+    at App.handleInput (http://localhost:5174/src/app/App.js?t=1775867152561:262:12)
+[   24608ms] SyntaxError: Failed to execute 'querySelector' on 'Element': '#fm-.' is not a valid selector.
+    at MetricsPanel.updateFingerMap (http://localhost:5174/src/components/MetricsPanel.js:224:35)
+    at App.handleKeyUp (http://localhost:5174/src/app/App.js?t=1775867152561:251:25)
