@@ -356,4 +356,44 @@ src/
 
 ---
 
+## Cursor Cloud specific instructions
+
+This workspace root is `/agent` and contains **seven independent git repos** under `/agent/repos/`. There is no monorepo tooling — install and run each product separately.
+
+### Runtime versions (verified)
+- Node.js v22+ and npm 10+
+- Python 3.12+ (stdlib only for autofish)
+
+### Dependency refresh (automatic on VM startup)
+See the workspace `update_script`: `npm install` in cadence, production-pipeline-template, robot_policy, and enterprise-pipeline/examples/reference-aws-pipeline. Autofish, Forge, and pac-man-scanner have no package manager deps.
+
+### Services to run for development
+
+| Repo | Command | Port | Notes |
+|------|---------|------|-------|
+| **cadence** | `cd repos/cadence && npm run dev -- --host 0.0.0.0 --port 5173` | 5173 | Primary web app; AI features optional (Manual mode works offline) |
+| **Forge** | `cd repos/Forge && python3 -m http.server 8080 --bind 0.0.0.0` | 8080 | Static marketing site |
+| **pac-man-scanner** | `cd repos/pac-man-scanner && python3 -m http.server 8081 --bind 0.0.0.0` | 8081 | Browser game; needs CDN (unpkg) on first load |
+| **reference-aws-pipeline** | `cd repos/enterprise-pipeline/examples/reference-aws-pipeline && npm run build && PORT=3000 npm start` | 3000 | Express API; tests pass without Postgres/Redis |
+
+Use **tmux** for long-running servers (see tool instructions).
+
+### Test / lint commands
+
+| Repo | Command |
+|------|---------|
+| cadence | `npm test` (126 tests) |
+| production-pipeline-template | `npm test && npm run lint` |
+| robot_policy | `npm test && npm run lint` |
+| reference-aws-pipeline | `npm test` (37 tests) |
+| autofish | `PYTHONPATH=src python3 run_2025_test.py`; agent unit tests: `PYTHONPATH=src python3 tests/unit/test_agents.py` |
+
+### Known cloud caveats
+- `./scripts/health-check.sh` in cadence/enterprise-pipeline may report failures for missing `.kimi/` dirs — tests still pass.
+- autofish `hello_mirofish.py` expects a top-level `data/` directory (missing in repo); simulation via `run_2025_test.py` works with `PYTHONPATH=src`.
+- autofish `tests/unit/test_tournament.py` has a pre-existing assertion failure (`r1_winners`); agent tests pass.
+- reference-aws-pipeline README mentions `npm run dev` but use `npm run build && npm start` instead.
+
+---
+
 *Follow these rules rigorously. They exist because violating them has caused real production failures.*
