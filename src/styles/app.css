@@ -134,11 +134,17 @@ kbd {
 .shell--zen .topbar,
 .shell--zen .foot,
 .shell--zen .stage__phase,
-.shell--zen .livebar,
 .shell--zen .typer__source {
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms ease;
+}
+
+/* Speed survives zen mode; accuracy and progress do not. Watching WPM is the
+   reason to be in zen mode, and the other two invite mid-passage arithmetic.
+   Removed from flow rather than faded, so the WPM stays centred. */
+.shell--zen .livebar__stat:not(.livebar__stat--wpm) {
+  display: none;
 }
 
 /* ── Result card ────────────────────────────────────────────── */

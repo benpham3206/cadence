@@ -11,6 +11,11 @@
  *      measured, and folding those in makes every digraph look slow.
  *   2. Flight time is measured keydown-to-keydown. Keyup timing varies with how
  *      long a typist holds a key, which is dwell, not travel.
+ *
+ * A wrong key marks the character and advances, rather than blocking until the
+ * right key arrives. Above roughly 100 WPM the typist has already committed the
+ * next keystroke or two before noticing the error, so a blocking cursor turns
+ * one mistake into a burst of rejected keys. Backspace is how you take it back.
  */
 
 /** Flight times beyond this are treated as the typist stopping, not typing. */
@@ -26,11 +31,9 @@ export const PRESS = {
 export class Run {
   /**
    * @param {string} text
-   * @param {{ strict?: boolean }} [options]
    */
-  constructor(text, options = {}) {
+  constructor(text) {
     this.text = text;
-    this.strict = options.strict ?? true;
 
     this.cursor = 0;
     // Null rather than 0: a timestamp of zero is legitimate, and treating it as
@@ -43,7 +46,7 @@ export class Run {
     this.correctPresses = 0;
     this.incorrectPresses = 0;
 
-    /** Indices currently marked wrong, so strict mode can clear them on retry. */
+    /** Indices standing wrong right now; backspacing over one clears it. */
     this.errorIndices = new Set();
     /** Indices that were ever wrong, for per-passage error reporting. */
     this.everWrong = new Set();
@@ -84,6 +87,17 @@ export class Run {
     return (this.correctPresses / this.totalPresses) * 100;
   }
 
+  /**
+   * Characters standing correct in the passage. Not the same as the cursor: the
+   * cursor advances over mistakes, and not the same as correctPresses, which
+   * counts a character twice if it was backspaced and retyped.
+   *
+   * @returns {number}
+   */
+  get correctChars() {
+    return this.cursor - this.errorIndices.size;
+  }
+
   /** @returns {number} 0-100 */
   get progress() {
     if (this.text.length === 0) return 100;
@@ -110,7 +124,7 @@ export class Run {
   wpm(now) {
     const ms = this.elapsedMs(now);
     if (ms <= 0) return 0;
-    return (this.cursor / 5) / (ms / 60000);
+    return (this.correctChars / 5) / (ms / 60000);
   }
 
   /**
@@ -138,10 +152,8 @@ export class Run {
       this._prevCorrectChar = null;
       this._lastCorrectDownAt = null;
 
-      if (!this.strict) {
-        this.cursor++;
-        if (this.complete) this.finishedAt = downAt;
-      }
+      this.cursor++;
+      if (this.complete) this.finishedAt = downAt;
       return { status: PRESS.INCORRECT, index, expected };
     }
 
@@ -168,6 +180,55 @@ export class Run {
       return { status: PRESS.COMPLETE, index, expected };
     }
     return { status: PRESS.CORRECT, index, expected };
+  }
+
+  /**
+   * Steps back over one character.
+   *
+   * The keystroke that already happened is not erased from the accuracy count.
+   * Accuracy asks how often the right key was hit on first contact, and taking
+   * a mistake back does not mean it was never made.
+   *
+   * @returns {{ status: string, cleared: number[] }}
+   */
+  backspace() {
+    if (this.cursor === 0) return { status: PRESS.IGNORED, cleared: [] };
+
+    const index = this.cursor - 1;
+    this.cursor = index;
+    this.errorIndices.delete(index);
+
+    // One stroke per position, so slow-section detection can map strokes back
+    // onto the passage without tripping over a retyped character.
+    if (this.strokes.length > 0 && this.strokes[this.strokes.length - 1].index === index) {
+      this.strokes.pop();
+    }
+
+    // Whatever comes next follows a correction, so its flight time measures the
+    // recovery rather than the transition. Break the chain.
+    this._prevCorrectChar = null;
+    this._lastCorrectDownAt = null;
+
+    return { status: PRESS.CORRECT, cleared: [index] };
+  }
+
+  /**
+   * Steps back over the word to the left of the cursor, plus any spaces
+   * immediately before it. Matches what ctrl+backspace does in a text field.
+   *
+   * @returns {{ status: string, cleared: number[] }}
+   */
+  backspaceWord() {
+    const cleared = [];
+
+    while (this.cursor > 0 && this.text[this.cursor - 1] === ' ') {
+      cleared.push(...this.backspace().cleared);
+    }
+    while (this.cursor > 0 && this.text[this.cursor - 1] !== ' ') {
+      cleared.push(...this.backspace().cleared);
+    }
+
+    return { status: cleared.length ? PRESS.CORRECT : PRESS.IGNORED, cleared };
   }
 
   /**

@@ -196,16 +196,94 @@ describe('Run', () => {
     assert.equal(run.complete, true);
   });
 
-  test('holds position on an error in strict mode', () => {
-    const run = new Run('ab', { strict: true });
+  test('advances past an error rather than blocking on it', () => {
+    const run = new Run('ab');
     assert.equal(run.press('x', 0).status, PRESS.INCORRECT);
+    assert.equal(run.cursor, 1);
+  });
+
+  test('ends the passage even when the final character is wrong', () => {
+    const run = new Run('ab');
+    run.press('a', 0);
+    run.press('x', 100);
+    assert.equal(run.complete, true);
+  });
+
+  test('excludes standing errors from net WPM', () => {
+    // Ten characters in six seconds, one of them wrong: nine correct is 18 WPM.
+    const run = new Run('abcdefghij');
+    const typed = 'abcdefghiX';
+    for (let i = 0; i < typed.length; i++) run.press(typed[i], i * (6000 / 9));
+    assert.equal(run.correctChars, 9);
+    assert.equal(Math.round(run.wpm()), 18);
+  });
+
+  test('backspace steps back and clears the error at that position', () => {
+    const run = new Run('ab');
+    run.press('x', 0);
+    assert.equal(run.errorIndices.size, 1);
+    const out = run.backspace();
+    assert.deepEqual(out.cleared, [0]);
+    assert.equal(run.cursor, 0);
+    assert.equal(run.errorIndices.size, 0);
+  });
+
+  test('backspace at the start of a passage does nothing', () => {
+    const run = new Run('ab');
+    const out = run.backspace();
+    assert.equal(out.status, PRESS.IGNORED);
     assert.equal(run.cursor, 0);
   });
 
-  test('advances past an error when strict mode is off', () => {
-    const run = new Run('ab', { strict: false });
+  test('backspace keeps the mistake in the accuracy count', () => {
+    // Accuracy asks how often the right key was hit first time. Taking a
+    // mistake back does not mean it was never made.
+    const run = new Run('ab');
     run.press('x', 0);
-    assert.equal(run.cursor, 1);
+    run.backspace();
+    run.press('a', 20);
+    run.press('b', 30);
+    assert.equal(Math.round(run.accuracy), 67);
+  });
+
+  test('does not record a digraph across a correction', () => {
+    const run = new Run('the');
+    run.press('t', 0);
+    run.press('x', 100);
+    run.backspace();
+    run.press('h', 200);
+    run.press('e', 300);
+    assert.deepEqual(
+      run.digraphSamples.map((s) => s.digraph),
+      ['he']
+    );
+  });
+
+  test('backspace keeps one stroke per position', () => {
+    const run = new Run('the');
+    run.press('t', 0);
+    run.press('x', 100);
+    run.backspace();
+    run.press('h', 200);
+    assert.deepEqual(
+      run.strokes.map((s) => s.index),
+      [0, 1]
+    );
+  });
+
+  test('ctrl+backspace clears the word to the left and its trailing space', () => {
+    const run = new Run('the quick fox');
+    for (const ch of 'the quick ') run.press(ch, 0);
+    assert.equal(run.cursor, 10);
+    run.backspaceWord();
+    assert.equal(run.cursor, 4);
+  });
+
+  test('ctrl+backspace inside a word clears back to the word start', () => {
+    const run = new Run('the quick fox');
+    for (const ch of 'the qui') run.press(ch, 0);
+    run.backspaceWord();
+    assert.equal(run.cursor, 4);
   });
 
   test('starts the clock on the first keystroke, not on construction', () => {
@@ -231,15 +309,16 @@ describe('Run', () => {
   });
 
   test('does not record a digraph across an error', () => {
-    // The pause after a miss is recovery time, not transition time.
-    const run = new Run('the');
+    // The pause after a miss is recovery time, not transition time, so the
+    // transition into the character after the miss is skipped.
+    const run = new Run('then');
     run.press('t', 0);
     run.press('x', 100);
-    run.press('h', 900);
-    run.press('e', 1000);
+    run.press('e', 900);
+    run.press('n', 1000);
     assert.deepEqual(
       run.digraphSamples.map((s) => s.digraph),
-      ['he']
+      ['en']
     );
   });
 
@@ -251,18 +330,18 @@ describe('Run', () => {
   });
 
   test('tracks accuracy against total keystrokes', () => {
-    const run = new Run('ab');
+    const run = new Run('abc');
     run.press('x', 0);
-    run.press('a', 10);
-    run.press('b', 20);
+    run.press('b', 10);
+    run.press('c', 20);
     assert.equal(Math.round(run.accuracy), 67);
   });
 
   test('counts a character wrong once even if missed repeatedly', () => {
     const run = new Run('ab');
     run.press('x', 0);
+    run.backspace();
     run.press('y', 10);
-    run.press('a', 20);
     assert.equal(run.everWrong.size, 1);
   });
 

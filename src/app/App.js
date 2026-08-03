@@ -212,7 +212,7 @@ export class App {
     this.currentQuoteId = quoteId;
     if (quoteId !== null) this.recent.add(quoteId);
 
-    this.run = new Run(text, { strict: this.profile.settings.strictMode });
+    this.run = new Run(text);
     this.stage.render(text, source);
     this.stage.setPhase({
       label: reason,
@@ -259,13 +259,41 @@ export class App {
     }
 
     if (this.view !== 'type' || !this.run) return;
-    if (e.metaKey || e.ctrlKey || e.altKey || PASSTHROUGH_KEYS.has(e.key)) return;
+    if (PASSTHROUGH_KEYS.has(e.key)) return;
+
+    // The veil is up, so the typist cannot see the passage they would be typing
+    // into. The first key buys focus and is otherwise swallowed.
+    if (!this.stage.hasFocus) {
+      e.preventDefault();
+      this.stage.focus();
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      this.handleBackspace(e.ctrlKey || e.altKey || e.metaKey);
+      return;
+    }
+
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
 
     if (e.key.length !== 1) return;
 
     e.preventDefault();
     this.keyDownAt.set(e.key, performance.now());
     this.handleChar(e.key, performance.now());
+  }
+
+  /** @param {boolean} wholeWord */
+  handleBackspace(wholeWord) {
+    const run = this.run;
+    if (!run) return;
+
+    const outcome = wholeWord ? run.backspaceWord() : run.backspace();
+    for (const index of outcome.cleared) this.stage.clearChar(index);
+
+    this.stage.setCursor(run.cursor);
+    this.guide.setNextChar(run.expectedChar);
   }
 
   /** @param {KeyboardEvent} e */
@@ -291,9 +319,7 @@ export class App {
       case PRESS.CORRECT:
       case PRESS.COMPLETE:
         this.stage.markChar(index, 'correct');
-        this.stage.setCursor(run.cursor);
         this.guide.flashKey(char, true);
-        this.guide.setNextChar(run.expectedChar);
         break;
 
       case PRESS.INCORRECT:
@@ -305,7 +331,12 @@ export class App {
         return;
     }
 
-    if (outcome.status === PRESS.COMPLETE) this.completePassage();
+    this.stage.setCursor(run.cursor);
+    this.guide.setNextChar(run.expectedChar);
+
+    // A wrong key on the final character still ends the passage, so completion
+    // is decided by the cursor rather than by the outcome of this keystroke.
+    if (run.complete) this.completePassage();
   }
 
   // ── Completion ────────────────────────────────────────────
@@ -381,6 +412,7 @@ export class App {
 
   tick() {
     const run = this.run;
+    if (this.view === 'type') this.stage.syncFocusVeil();
     if (!run || !run.started || this.view !== 'type') return;
     this.stage.setLive({
       wpm: run.wpm(performance.now()),

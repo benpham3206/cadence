@@ -16,16 +16,16 @@ const IDLE_BLINK_DELAY_MS = 900;
 export class TypingStage {
   /**
    * @param {HTMLElement} root
-   * @param {{ onFocusChange?: (focused: boolean) => void }} [handlers]
    */
-  constructor(root, handlers = {}) {
+  constructor(root) {
     this.root = root;
-    this.handlers = handlers;
 
     /** @type {HTMLElement[]} */
     this.charEls = [];
     this.text = '';
     this.lineOffset = 0;
+    this.cursorIndex = 0;
+    this._cachedLineHeight = 0;
     this.idleTimer = null;
 
     root.innerHTML = `
@@ -38,8 +38,11 @@ export class TypingStage {
       <div class="typer" id="typer">
         <div class="typer__scroll" id="typer-scroll">
           <div class="typer__text" id="typer-text"></div>
+          <!-- Inside the scroller: character offsets are measured against it, so
+               the caret must share that coordinate space or it lags a line
+               behind once the passage starts scrolling. -->
+          <div class="caret" id="caret"></div>
         </div>
-        <div class="caret" id="caret"></div>
         <div class="typer__veil" id="typer-veil">
           <span>click or press any key to focus</span>
         </div>
@@ -50,7 +53,7 @@ export class TypingStage {
       <div class="typer__source" id="typer-source"></div>
 
       <div class="livebar livebar--hidden" id="livebar">
-        <span class="livebar__stat"><span class="livebar__value" id="live-wpm">0</span> wpm</span>
+        <span class="livebar__stat livebar__stat--wpm"><span class="livebar__value" id="live-wpm">0</span> wpm</span>
         <span class="livebar__stat"><span class="livebar__value livebar__value--muted" id="live-acc">100</span>% acc</span>
         <span class="livebar__stat"><span class="livebar__value livebar__value--muted" id="live-progress">0</span>% done</span>
       </div>
@@ -80,17 +83,42 @@ export class TypingStage {
     this.els.input.addEventListener('focus', () => this._setFocused(true));
     this.els.input.addEventListener('blur', () => this._setFocused(false));
 
+
     window.addEventListener('resize', () => this.refreshCaret());
+  }
+
+  /**
+   * Shows or hides the focus veil to match reality.
+   *
+   * Called from the app's existing tick rather than only from focus and blur
+   * events. Those events do not fire in every path that changes the active
+   * element, and a veil that disagrees with where the keystrokes are going is
+   * worse than no veil at all.
+   */
+  syncFocusVeil() {
+    this._setFocused(this.hasFocus);
   }
 
   /** @param {boolean} focused */
   _setFocused(focused) {
     this.els.veil.classList.toggle('typer__veil--visible', !focused);
-    this.handlers.onFocusChange?.(focused);
+  }
+
+  /**
+   * Whether keystrokes belong to the passage.
+   *
+   * Read from the DOM rather than cached from focus events: `focus()` can move
+   * the active element without firing an event when the window itself is not
+   * focused, and a cached flag that says "blurred" while the input is active
+   * swallows every keystroke the typist makes.
+   */
+  get hasFocus() {
+    return document.activeElement === this.els.input;
   }
 
   focus() {
     this.els.input.focus({ preventScroll: true });
+    this._setFocused(this.hasFocus);
   }
 
   get inputEl() {
@@ -163,6 +191,7 @@ export class TypingStage {
    * @param {number} index
    */
   setCursor(index) {
+    this.cursorIndex = index;
     const target = this.charEls[index] ?? this.charEls[this.charEls.length - 1];
     if (!target) return;
 
@@ -206,8 +235,7 @@ export class TypingStage {
   /** Recomputes caret placement after a resize or font swap. */
   refreshCaret() {
     this._cachedLineHeight = 0;
-    const index = this.charEls.findIndex((el) => !el.classList.contains('char--correct'));
-    this.setCursor(index === -1 ? this.charEls.length : index);
+    this.setCursor(this.cursorIndex);
   }
 
   _resetIdleBlink() {

@@ -24,8 +24,6 @@ export const DEFAULT_SETTINGS = {
   lengthGroups: [0, 1, 2],
   quotesPerCycle: 4,
   targetedPerCycle: 2,
-  /** Require the passage be typed exactly; no skipping ahead past an error. */
-  strictMode: true,
 };
 
 /**

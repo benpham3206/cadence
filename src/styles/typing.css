@@ -80,7 +80,10 @@
 .typer__scroll {
   position: absolute;
   inset: 0;
-  transition: transform 140ms var(--caret-ease);
+  /* Must match the caret exactly. The caret is a child of this element, so on a
+     line change the two transforms are equal and opposite; any difference in
+     duration or easing shows up as the caret dipping and settling. */
+  transition: transform var(--caret-speed) var(--caret-ease);
   will-change: transform;
 }
 
