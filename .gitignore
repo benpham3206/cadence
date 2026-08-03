@@ -1,7 +1,20 @@
+# dependencies
 node_modules/
+
+# build output
 dist/
-.DS_Store
+.vercel/
+
+# environment
 .env
 .env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+.idea/
+*.swp
+
+# agent + tooling scratch
 .kimi/
-production pipeline copy/
+.playwright-mcp/

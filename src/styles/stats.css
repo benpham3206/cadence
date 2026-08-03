@@ -1,0 +1,231 @@
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  padding: 1rem 0 3rem;
+  overflow-y: auto;
+}
+
+.stats__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1.25rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.panel__title {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+  margin: 0;
+  font-weight: normal;
+}
+
+.panel__empty {
+  font-size: 0.82rem;
+  color: var(--sub);
+  font-style: italic;
+}
+
+/* ── Trend chart ────────────────────────────────────────────── */
+
+.trend {
+  width: 100%;
+  height: 180px;
+  overflow: visible;
+}
+
+.trend__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend__area {
+  fill: var(--accent);
+  opacity: 0.08;
+}
+
+.trend__goal {
+  stroke: var(--sub);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.trend__goal-label,
+.trend__axis-label {
+  fill: var(--sub);
+  font-size: 10px;
+  font-family: var(--font-mono);
+}
+
+.trend__dot--targeted {
+  fill: var(--bg);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+/* ── Weak transitions ───────────────────────────────────────── */
+
+.weaklist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weakitem {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr 4.5rem 3rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--sub);
+  text-align: left;
+  width: 100%;
+  transition: background-color 110ms ease;
+}
+
+.weakitem:hover {
+  background: var(--sub-alt);
+}
+
+.weakitem__digraph {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.weakitem__bar {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sub-alt);
+  overflow: hidden;
+}
+
+.weakitem__fill {
+  /* Must be a block: an inline span collapses to zero height and the bar
+     disappears entirely. */
+  display: block;
+  height: 100%;
+  background: var(--error);
+  border-radius: 3px;
+}
+
+.weakitem__ms {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.weakitem__samples {
+  font-size: 0.7rem;
+  text-align: right;
+}
+
+.weakitem__flag {
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+
+/* ── Heatmap ────────────────────────────────────────────────── */
+
+.heatmap {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+}
+
+.heatmap__cell {
+  stroke: var(--bg);
+  stroke-width: 0.5;
+}
+
+.heatmap__label {
+  fill: var(--sub);
+  font-size: 3.2px;
+  font-family: var(--font-mono);
+}
+
+.heatmap__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--sub);
+}
+
+.heatmap__swatches {
+  display: flex;
+  gap: 2px;
+}
+
+.heatmap__swatch {
+  width: 16px;
+  height: 8px;
+  border-radius: 1px;
+}
+
+/* ── Finger breakdown ───────────────────────────────────────── */
+
+.fingers {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  height: 130px;
+}
+
+.fingerbar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.fingerbar__col {
+  width: min(100%, 46px);
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  opacity: 0.85;
+  transition: height 200ms ease;
+}
+
+.fingerbar__label {
+  font-size: 0.62rem;
+  color: var(--sub);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.fingerbar__ms {
+  font-size: 0.68rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Data controls ──────────────────────────────────────────── */
+
+.datarow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.danger:hover {
+  background: var(--error);
+  color: var(--bg);
+}

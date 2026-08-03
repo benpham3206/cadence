@@ -1,45 +1,92 @@
+/*
+ * Theme tokens.
+ *
+ * Every colour in the app resolves through these four roles, borrowed from
+ * monkeytype's model because it is the right abstraction for a typing surface:
+ *
+ *   --bg        page background
+ *   --sub       untyped text, chrome, anything recessive
+ *   --text      text you have already typed correctly
+ *   --accent    caret, focus, the one colour that draws the eye
+ *   --error     incorrect keystrokes
+ *
+ * A theme only needs to define those to look coherent.
+ */
+
 :root {
-  /* Colors */
-  --color-bg: #0a0a0a;
-  --color-surface: #111111;
-  --color-surface-2: #1a1a1a;
-  --color-surface-3: #222222;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-2: rgba(255, 255, 255, 0.15);
-  --color-text: #e8e8e3;
-  --color-text-muted: #888888;
-  --color-text-subtle: #444444;
-  --color-accent: #00d084;
-  --color-accent-dim: rgba(0, 208, 132, 0.15);
-  --color-accent-glow: rgba(0, 208, 132, 0.08);
-  --color-secondary: #ff4d00;
-  --color-secondary-dim: rgba(255, 77, 0, 0.15);
-  --color-tertiary: #afa9ec;
-  --color-tertiary-dim: rgba(175, 169, 236, 0.15);
-  --color-error: #e85353;
-  --color-error-dim: rgba(232, 83, 83, 0.15);
+  --font-mono: 'JetBrains Mono', 'Roboto Mono', 'SF Mono', ui-monospace, 'Menlo', monospace;
 
-  /* Typography */
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
+  /* Typing surface sizing */
+  --type-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  --type-line: 1.75;
+  --stage-width: min(1100px, 88vw);
 
-  /* Spacing */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4rem;
+  /* Motion. Kept short: a typing app must never feel like it lags input. */
+  --caret-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --caret-speed: 90ms;
 
-  /* Layout */
-  --panel-width: 320px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius: 8px;
 
-  /* Easing */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /*
+   * Per-finger palette. Theme-independent on purpose: these encode anatomy,
+   * not mood, and the same finger should be the same colour in every theme.
+   * Declared at the root so the keyboard, the hands and the stats charts all
+   * resolve them.
+   */
+  --f-pinky: #7c9cf0;
+  --f-ring: #a78bfa;
+  --f-middle: #f472b6;
+  --f-index: #fb923c;
+  --f-thumb: #5eead4;
+}
+
+/* Default: cadence. Mint on near-black, so it is recognisably not monkeytype. */
+[data-theme='cadence'] {
+  --bg: #101112;
+  --sub: #4e5155;
+  --sub-alt: #191b1d;
+  --text: #e6e7e8;
+  --accent: #4ade9b;
+  --error: #e2586b;
+  --error-extra: #8c3543;
+}
+
+[data-theme='serika'] {
+  --bg: #323437;
+  --sub: #646669;
+  --sub-alt: #2c2e31;
+  --text: #d1d0c5;
+  --accent: #e2b714;
+  --error: #ca4754;
+  --error-extra: #7e2a33;
+}
+
+[data-theme='nord'] {
+  --bg: #2e3440;
+  --sub: #616e88;
+  --sub-alt: #272b35;
+  --text: #d8dee9;
+  --accent: #88c0d0;
+  --error: #bf616a;
+  --error-extra: #7d4249;
+}
+
+[data-theme='gruvbox'] {
+  --bg: #282828;
+  --sub: #7c6f64;
+  --sub-alt: #232323;
+  --text: #ebdbb2;
+  --accent: #d79921;
+  --error: #cc241d;
+  --error-extra: #7c1a15;
+}
+
+[data-theme='paper'] {
+  --bg: #f4f1ea;
+  --sub: #a8a29a;
+  --sub-alt: #e8e4db;
+  --text: #2b2a27;
+  --accent: #c2410c;
+  --error: #b91c1c;
+  --error-extra: #e7b6b6;
 }

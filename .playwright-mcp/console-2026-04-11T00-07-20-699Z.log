@@ -1,5 +1,0 @@
-[     138ms] TypeError: Cannot read properties of null (reading 'getContext')
-    at new ParticleSystem (http://localhost:5173/src/app/particles.js:4:23)
-    at App.mount (http://localhost:5173/src/app/App.js?t=1775866018411:116:22)
-    at http://localhost:5173/src/main.js:18:5
-[     127ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:5173/:0

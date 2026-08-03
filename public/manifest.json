@@ -1,16 +1,17 @@
 {
-  "name": "Cadence — Typing Coach",
+  "name": "Cadence — Typing Cadence Trainer",
   "short_name": "Cadence",
-  "description": "Personalized typing coach with digraph-level cadence analysis",
+  "description": "Finds the key transitions slowing you down and serves quotes that drill them.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#101112",
+  "theme_color": "#101112",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
