@@ -269,12 +269,6 @@ export class App {
       return;
     }
 
-    if (e.key === 'Backspace') {
-      e.preventDefault();
-      this.handleBackspace(e.ctrlKey || e.altKey || e.metaKey);
-      return;
-    }
-
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
     if (e.key.length !== 1) return;
@@ -282,18 +276,6 @@ export class App {
     e.preventDefault();
     this.keyDownAt.set(e.key, performance.now());
     this.handleChar(e.key, performance.now());
-  }
-
-  /** @param {boolean} wholeWord */
-  handleBackspace(wholeWord) {
-    const run = this.run;
-    if (!run) return;
-
-    const outcome = wholeWord ? run.backspaceWord() : run.backspace();
-    for (const index of outcome.cleared) this.stage.clearChar(index);
-
-    this.stage.setCursor(run.cursor);
-    this.guide.setNextChar(run.expectedChar);
   }
 
   /** @param {KeyboardEvent} e */
@@ -331,11 +313,12 @@ export class App {
         return;
     }
 
+    // On a miss the cursor has not moved, so this repositions the caret onto
+    // the same character; it still resets the blink, which reads as the caret
+    // holding steady where the typist is stuck.
     this.stage.setCursor(run.cursor);
     this.guide.setNextChar(run.expectedChar);
 
-    // A wrong key on the final character still ends the passage, so completion
-    // is decided by the cursor rather than by the outcome of this keystroke.
     if (run.complete) this.completePassage();
   }
 
