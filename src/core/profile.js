@@ -37,7 +37,6 @@ function defaultProfile() {
     digraphStats: {},
     sessions: [],
     textCount: 0,
-    retirementCounters: {},
     recentQuoteIds: [],
     settings: { ...DEFAULT_SETTINGS },
   };
@@ -57,7 +56,6 @@ function backfill(parsed) {
     settings: { ...base.settings, ...(parsed.settings ?? {}) },
     digraphStats: parsed.digraphStats ?? {},
     sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
-    retirementCounters: parsed.retirementCounters ?? {},
     recentQuoteIds: Array.isArray(parsed.recentQuoteIds) ? parsed.recentQuoteIds : [],
     version: CURRENT_VERSION,
   };
@@ -77,7 +75,6 @@ function migrate(legacy) {
   const next = defaultProfile();
   next.digraphStats = legacy.digraphStats ?? {};
   next.textCount = legacy.textCount ?? 0;
-  next.retirementCounters = legacy.retirementCounters ?? {};
   next.sessions = Array.isArray(legacy.sessions) ? legacy.sessions.slice(-MAX_SESSIONS) : [];
   if (legacy.settings && typeof legacy.settings === 'object') {
     if (typeof legacy.settings.soundEnabled === 'boolean') {
