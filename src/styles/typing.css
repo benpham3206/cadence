@@ -1,0 +1,220 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  position: relative;
+  min-height: 0;
+}
+
+.stage__phase {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--sub);
+  min-height: 1.2rem;
+}
+
+.stage__phase-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.phase-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sub-alt);
+  border: 1px solid var(--sub);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.phase-dot--done {
+  background: var(--sub);
+}
+
+.phase-dot--active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.phase-dot--targeted {
+  border-radius: 1px;
+  transform: rotate(45deg);
+}
+
+.stage__targets {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.target-chip {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  background: var(--sub-alt);
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+.target-chip__count {
+  color: var(--sub);
+  margin-left: 0.2rem;
+}
+
+/* ── Text surface ───────────────────────────────────────────── */
+
+.typer {
+  position: relative;
+  width: var(--stage-width);
+  /* Exactly three lines are visible; the rest scrolls under the mask. */
+  height: calc(var(--type-size) * var(--type-line) * 3);
+  overflow: hidden;
+  cursor: text;
+}
+
+.typer__scroll {
+  position: absolute;
+  inset: 0;
+  /* Must match the caret exactly. The caret is a child of this element, so on a
+     line change the two transforms are equal and opposite; any difference in
+     duration or easing shows up as the caret dipping and settling. */
+  transition: transform var(--caret-speed) var(--caret-ease);
+  will-change: transform;
+}
+
+.typer__text {
+  font-size: var(--type-size);
+  line-height: var(--type-line);
+  letter-spacing: 0.01em;
+  user-select: none;
+}
+
+.word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.char {
+  color: var(--sub);
+  transition: color 60ms linear;
+}
+
+.char--correct {
+  color: var(--text);
+}
+
+.char--incorrect {
+  color: var(--error);
+  text-decoration: underline;
+  text-decoration-color: var(--error);
+  text-underline-offset: 0.2em;
+}
+
+/* A mistyped space needs a visible body, since the glyph itself is blank. */
+.char--incorrect.char--space {
+  background: var(--error-extra);
+  border-radius: 2px;
+}
+
+.caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: calc(var(--type-size) * 1.3);
+  background: var(--accent);
+  border-radius: 1px;
+  transition: transform var(--caret-speed) var(--caret-ease);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.caret--idle {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.typer__source {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--sub);
+  text-align: center;
+  min-height: 1.2rem;
+}
+
+/* ── Focus gate ─────────────────────────────────────────────── */
+
+.typer__veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(3px);
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+  z-index: 3;
+}
+
+.typer__veil--visible {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* The real input, kept off-screen but focusable. */
+.typer__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  resize: none;
+  top: 50%;
+  left: 50%;
+}
+
+/* ── Live readout ───────────────────────────────────────────── */
+
+.livebar {
+  display: flex;
+  align-items: baseline;
+  gap: 1.75rem;
+  font-size: 0.85rem;
+  color: var(--sub);
+  min-height: 1.6rem;
+}
+
+.livebar__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.livebar__value {
+  color: var(--accent);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.livebar__value--muted {
+  color: var(--text);
+}
+
+.livebar--hidden {
+  visibility: hidden;
+}

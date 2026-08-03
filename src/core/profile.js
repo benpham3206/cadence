@@ -1,110 +1,194 @@
-const PROFILE_KEY = 'cadence_profile_v2';
-const LEGACY_KEY = 'cadence_profile_v1';
+import { ok, fail, failFrom } from './result.js';
+
+/**
+ * Persistent typist profile.
+ *
+ * Everything lives in localStorage: there are no accounts and no server. The
+ * digraph statistics are the valuable part — they take real practice hours to
+ * accumulate — so migration between versions never discards them.
+ */
+
+const PROFILE_KEY = 'cadence_profile_v3';
+const LEGACY_KEYS = ['cadence_profile_v2', 'cadence_profile_v1'];
+
+export const CURRENT_VERSION = 3;
+
+/** Sessions retained for trend charts. Older entries are dropped oldest-first. */
+const MAX_SESSIONS = 500;
+
+export const DEFAULT_SETTINGS = {
+  theme: 'cadence',
+  showHands: true,
+  soundOnError: false,
+  /** Corpus length groups in rotation: short, medium, long, thicc. */
+  lengthGroups: [0, 1, 2],
+  quotesPerCycle: 4,
+  targetedPerCycle: 2,
+};
+
+/**
+ * @returns {any}
+ */
+function defaultProfile() {
+  return {
+    version: CURRENT_VERSION,
+    digraphStats: {},
+    sessions: [],
+    textCount: 0,
+    recentQuoteIds: [],
+    settings: { ...DEFAULT_SETTINGS },
+  };
+}
+
+/**
+ * Fills in anything missing from a profile that is already the current version.
+ *
+ * @param {any} parsed
+ * @returns {any}
+ */
+function backfill(parsed) {
+  const base = defaultProfile();
+  return {
+    ...base,
+    ...parsed,
+    settings: { ...base.settings, ...(parsed.settings ?? {}) },
+    digraphStats: parsed.digraphStats ?? {},
+    sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+    recentQuoteIds: Array.isArray(parsed.recentQuoteIds) ? parsed.recentQuoteIds : [],
+    version: CURRENT_VERSION,
+  };
+}
+
+/**
+ * Carries forward the measurement history from v1 and v2 profiles.
+ *
+ * The API key, cached AI drill text and transfer pools those versions stored
+ * are deliberately dropped: Cadence no longer calls a model, and a stale key
+ * sitting in localStorage is a liability rather than an asset.
+ *
+ * @param {any} legacy
+ * @returns {any}
+ */
+function migrate(legacy) {
+  const next = defaultProfile();
+  next.digraphStats = legacy.digraphStats ?? {};
+  next.textCount = legacy.textCount ?? 0;
+  next.sessions = Array.isArray(legacy.sessions) ? legacy.sessions.slice(-MAX_SESSIONS) : [];
+  if (legacy.settings && typeof legacy.settings === 'object') {
+    if (typeof legacy.settings.soundEnabled === 'boolean') {
+      next.settings.soundOnError = legacy.settings.soundEnabled;
+    }
+  }
+  return next;
+}
 
 export const Profile = {
-  _default() {
-    return {
-      version: 2,
-      digraphStats: {},
-      chunkHorizon: 1.5,
-      sessions: [],
-      textCount: 0,
-      apiKey: '',
-      apiMode: 'auto',
-      retirementCounters: {},
-      aiCache: { hash: '', texts: [] },
-      transferPool: [],
-      transferHistory: [],
-      settings: {
-        soundEnabled: false,
-        particleEnabled: true,
-        ghostEnabled: false,
-        rhythmEnabled: false,
-        zenDefault: false,
-        chunkNudgeEnabled: true,
-      },
-      ghostLibrary: {},
-    };
-  },
+  _default: defaultProfile,
 
+  /**
+   * Always returns a usable profile. A corrupt payload yields defaults rather
+   * than an exception, because a typing app that will not start is worse than
+   * one that starts empty.
+   *
+   * @param {Storage|null} [storage]
+   * @returns {any}
+   */
   load(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
     try {
-      let raw = storage?.getItem(PROFILE_KEY);
-      if (!raw) {
-        raw = storage?.getItem(LEGACY_KEY);
-        if (raw) {
-          const migrated = this._migrate(JSON.parse(raw));
-          this.save(migrated, storage);
-          storage?.removeItem(LEGACY_KEY);
-          return migrated;
-        }
+      const raw = storage?.getItem(PROFILE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.version === CURRENT_VERSION) return backfill(parsed);
+        // A newer or unrecognised version: keep the stats, reset the shape.
+        return migrate(parsed ?? {});
       }
-      if (!raw) return this._default();
-      const parsed = JSON.parse(raw);
-      if (parsed.version !== 2) return this._default();
-      return this._backfill(parsed);
+
+      for (const key of LEGACY_KEYS) {
+        const legacyRaw = storage?.getItem(key);
+        if (!legacyRaw) continue;
+        const migrated = migrate(JSON.parse(legacyRaw));
+        this.save(migrated, storage);
+        storage?.removeItem(key);
+        return migrated;
+      }
+
+      return defaultProfile();
     } catch {
-      return this._default();
+      return defaultProfile();
     }
   },
 
+  /**
+   * @param {any} profile
+   * @param {Storage|null} [storage]
+   * @returns {import('./result.js').Success<true> | import('./result.js').Failure}
+   */
   save(profile, storage = typeof localStorage !== 'undefined' ? localStorage : null) {
+    if (!storage) {
+      return fail('profile.save', 'storage', 'no storage backend available in this environment');
+    }
     try {
-      storage?.setItem(PROFILE_KEY, JSON.stringify(profile));
-    } catch {}
+      storage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      return ok(true);
+    } catch (err) {
+      // Quota exhaustion is the realistic cause; the caller may want to prune.
+      return failFrom('profile.save', 'storage', err, { key: PROFILE_KEY });
+    }
   },
 
+  /**
+   * @param {Storage|null} [storage]
+   */
   clear(storage = typeof localStorage !== 'undefined' ? localStorage : null) {
     storage?.removeItem(PROFILE_KEY);
-    storage?.removeItem(LEGACY_KEY);
+    for (const key of LEGACY_KEYS) storage?.removeItem(key);
   },
 
+  /**
+   * @param {any} profile
+   * @param {any} summary
+   * @param {Storage|null} [storage]
+   */
   appendSession(profile, summary, storage) {
     profile.sessions.push(summary);
-    if (profile.sessions.length > 200) profile.sessions = profile.sessions.slice(-200);
-    this.save(profile, storage);
+    if (profile.sessions.length > MAX_SESSIONS) {
+      profile.sessions = profile.sessions.slice(-MAX_SESSIONS);
+    }
+    return this.save(profile, storage);
   },
 
-  _migrate(v1) {
-    const v2 = this._default();
-    v2.digraphStats = v1.digraphStats || {};
-    v2.chunkHorizon = v1.chunkHorizon ?? 1.5;
-    v2.sessions = v1.sessions || [];
-    v2.textCount = v1.textCount || 0;
-    v2.apiKey = v1.apiKey || '';
-    v2.apiMode = v1.apiMode || 'auto';
-    v2.retirementCounters = v1.retirementCounters || {};
-    v2.aiCache = v1.aiCache || { hash: '', texts: [] };
-    v2.transferPool = v1.transferPool || [];
-    v2.transferHistory = v1.transferHistory || [];
-    return v2;
-  },
-
-  _backfill(parsed) {
-    if (!parsed.settings) parsed.settings = this._default().settings;
-    if (parsed.settings.chunkNudgeEnabled === undefined) parsed.settings.chunkNudgeEnabled = true;
-    if (!parsed.ghostLibrary) parsed.ghostLibrary = {};
-    if (!parsed.aiCache) parsed.aiCache = { hash: '', texts: [] };
-    if (!parsed.transferPool) parsed.transferPool = [];
-    if (!parsed.transferHistory) parsed.transferHistory = [];
-    if (!parsed.retirementCounters) parsed.retirementCounters = {};
-    if (!parsed.apiMode) parsed.apiMode = 'auto';
-    return parsed;
-  },
-
+  /**
+   * @param {any} profile
+   * @returns {string}
+   */
   exportProfile(profile) {
     return JSON.stringify(profile, null, 2);
   },
 
+  /**
+   * @param {string} jsonString
+   * @returns {import('./result.js').Success<any> | import('./result.js').Failure}
+   */
   importProfile(jsonString) {
+    let parsed;
     try {
-      const parsed = JSON.parse(jsonString);
-      if (!parsed || typeof parsed !== 'object') return null;
-      if (parsed.version === 1) return this._migrate(parsed);
-      if (parsed.version === 2) return this._backfill(parsed);
-      return null;
-    } catch {
-      return null;
+      parsed = JSON.parse(jsonString);
+    } catch (err) {
+      return failFrom('profile.import', 'parse', err);
     }
+
+    if (parsed === null || typeof parsed !== 'object') {
+      return fail('profile.import', 'validation', 'profile payload is not an object', {
+        received: typeof parsed,
+      });
+    }
+    if (typeof parsed.version !== 'number') {
+      return fail('profile.import', 'validation', 'profile payload has no version field');
+    }
+    if (parsed.digraphStats !== undefined && typeof parsed.digraphStats !== 'object') {
+      return fail('profile.import', 'validation', 'digraphStats must be an object');
+    }
+
+    return ok(parsed.version === CURRENT_VERSION ? backfill(parsed) : migrate(parsed));
   },
 };
