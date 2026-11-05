@@ -39,7 +39,7 @@ Recency is weighted up, because motor learning responds to addressing a stumble 
 
 > *Fear is a strange soil. Mainly it grows obedience like corn, which grows in ro**ws** and makes weeding easy. But sometimes it gro**ws** the potatoes of defiance, which flourish underground.*
 
-Four reps of `ws` in 181 characters of actual writing. When no quote is dense enough for a rare transition, a synthetic word drill is generated as a fallback.
+Four reps of `ws` in 181 characters of actual writing. When no quote is dense enough for a rare transition, Cadence tries a synthetic word drill. If no matching quote or drill text is available, it shows a notice and continues with a regular quote.
 
 **Form.** A keyboard and hand diagram shows the correct finger for the next character, including which pinky should be holding shift. Reaching 130 WPM with improvised fingering builds a ceiling that practice alone will not move.
 

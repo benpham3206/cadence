@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { App } from '../../src/app/App.js';
 import { Corpus } from '../../src/core/corpus.js';
 import { DigraphMap } from '../../src/core/digraph.js';
 import { SessionFlow } from '../../src/core/session-flow.js';
 
-const profile = JSON.parse(
-  readFileSync(new URL('../fixtures/manual-drill-profile.json', import.meta.url), 'utf8')
-);
+const profile = {
+  digraphStats: { zq: { count: 5, mean: 900, m2: 0 } },
+  settings: { lengthGroups: [0], quotesPerCycle: 4, targetedPerCycle: 2 },
+};
 
 test('notifies when a manual drill has no matching text', () => {
   const notices = [];
