@@ -140,6 +140,7 @@ export class App {
       if (this.loadTargeted([{ digraph, mean: this.digraphMap.getStats(digraph)?.mean ?? 0 }], 'drilling ' + digraph)) {
         return;
       }
+      this.notify('No drill text is available for ' + digraph + '. Continuing with a regular quote.');
     }
 
     const targets = this.buildTargets();
